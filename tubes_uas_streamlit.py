@@ -79,7 +79,7 @@ with st.sidebar:
         st.markdown('<p class="title">test</p>', unsafe_allow_html=True)
     # Add a subtitle for filters
     st.subheader("Filters")
-    
+
     # Filter by year range using a slider
     year_filter = st.slider(
         "Select Year Range",
@@ -89,11 +89,17 @@ with st.sidebar:
     )
     
     # Filter by genre using multiselect
-    genre_filter = st.multiselect(
-        "Select Genre(s)",
-        options=df['genre'].unique(),  # Unique genres as options
-        default=df['genre'].unique()  # Default to all genres
-    )
+    select_all = st.checkbox("Select All Genres", value=True)
+    if select_all:
+        genre_filter = df['genre'].unique()  # Select all genres
+    else:
+        genre_filter = st.multiselect(
+            "Select Genre(s)",
+            options=df['genre'].unique(),
+            default=[],
+            help="Search and select one or multiple genres"
+        )
+
     
     # Apply filters to the DataFrame
     filtered_df = df[
@@ -101,9 +107,9 @@ with st.sidebar:
         (df['year'] <= year_filter[1]) &  # Filter by end year
         (df['genre'].isin(genre_filter))  # Filter by selected genres
     ]
-    
-    # Display filtered data count
-    st.write(f"Filtered dataset contains {len(filtered_df)} songs.")
+
+df = filtered_df
+
 
 st.markdown('<p class="title"> Dataset Information </p>', unsafe_allow_html=True)
 
