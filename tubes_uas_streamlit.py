@@ -210,7 +210,38 @@ else:
     col1, col2= st.columns((5, 5), gap='large')
 
     with col1:
-        st.write('a')
+        st.markdown('<p class="subtitle">Top Artists by Number of Songs</p>', unsafe_allow_html=True)
+        # Total songs per artist
+        artist_song_count = df.groupby('artist').size().reset_index(name='song_count')
+        top_artists_by_songs = artist_song_count.sort_values(by='song_count', ascending=False).head(5)  # Top 5 artists
+
+        artist_chart = alt.Chart(top_artists_by_songs).mark_bar(color='green').encode(
+            x=alt.X('song_count:Q', title='Number of Songs'),
+            y=alt.Y('artist:N', sort='-x', title='Artist'),
+            tooltip=['artist:N', 'song_count:Q']
+        ).properties(
+            width=400,
+            height=300
+        )
+
+        st.altair_chart(artist_chart, use_container_width=True)
 
     with col2:
-        st.write('b')
+        st.markdown('<p class="subtitle">Total Songs Released Per Year</p>', unsafe_allow_html=True)
+        # Group data by year to calculate the number of songs and average popularity
+        annual_trends = df.groupby('year').agg(
+            total_songs=('song', 'count'),
+            avg_popularity=('popularity', 'mean')
+        ).reset_index()
+
+        # Line chart for the total number of songs released per year
+        songs_trend_chart = alt.Chart(annual_trends).mark_line(color='green', point=True).encode(
+            x=alt.X('year:O', title='Year'),
+            y=alt.Y('total_songs:Q', title='Total Songs Released'),
+            tooltip=['year:O', 'total_songs:Q']
+        ).properties(
+            width=600,
+            height=300
+        )
+        st.altair_chart(songs_trend_chart, use_container_width=True)
+
