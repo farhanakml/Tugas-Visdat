@@ -1,9 +1,6 @@
 import pandas as pd
 import altair as alt
 import streamlit as st
-import plotly.express as px
-from datetime import datetime
-import calendar as cal
 
 st.set_page_config(
     page_title="Dashboard Spotify Dataset Analysis",
@@ -25,10 +22,11 @@ df = df.explode('genre')
 
 df['duration'] = df['duration_ms'] / 60000
 
+
 st.markdown("""
     <style>
     @font-face {
-        font-family: 'GothamBold';
+        font-family: 'Gotham';
         src: url('fonts/GothamMedium.ttf') format('truetype');
         font-weight: bold;
         font-style: normal;
@@ -42,6 +40,8 @@ st.markdown("""
         background-color: #1DB954;
         color: white;
         font-family: 'Gotham', sans-serif;
+        width: 100%;
+        height: 40px;
     }
     .title {
         font-family: 'Gotham', sans-serif;
@@ -68,17 +68,20 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<p class="main-title"> Spotify Dataset Dashboard</p>', unsafe_allow_html=True)
+if 'show_search' not in st.session_state:
+    st.session_state.show_search = False
 
+# Sidebar content
 with st.sidebar:
     st.image('spotify-logo.png')
-    col1, col2 = st.columns((2, 4))
-    with col1:
-        st.markdown('<p class="title">phaaa</p>', unsafe_allow_html=True)
-    with col2:
-        st.markdown('<p class="title">test</p>', unsafe_allow_html=True)
-    # Add a subtitle for filters
-    show_search = st.checkbox("Search for Song/Artist", value=False)  # Initially hidden
+
+    if st.button("Home"):
+        st.session_state.show_search = False
+
+    if st.button("Search"):
+        st.session_state.show_search = True
+
+    # Filters section
     st.subheader("Filters")
 
     # Filter by year range using a slider
@@ -88,7 +91,7 @@ with st.sidebar:
         max_value=int(df['year'].max()),  # Dynamically set max year
         value=(int(df['year'].min()), int(df['year'].max()))  # Default to full range
     )
-    
+
     # Filter by genre using multiselect
     select_all = st.checkbox("Select All Genres", value=True)
     if select_all:
@@ -101,7 +104,6 @@ with st.sidebar:
             help="Search and select one or multiple genres"
         )
 
-    
     # Apply filters to the DataFrame
     filtered_df = df[
         (df['year'] >= year_filter[0]) &  # Filter by start year
@@ -109,24 +111,30 @@ with st.sidebar:
         (df['genre'].isin(genre_filter))  # Filter by selected genres
     ]
 
+# Filtered data
 df = filtered_df
 
-if show_search:
-        search_term = st.text_input("Search", placeholder="Type a song or artist name...")
-        if st.button("Search"):
-            search_results = df[df['artist'].str.contains(search_term, case=False, na=False) | 
-                                df['song'].str.contains(search_term, case=False, na=False)]
-            
-            # Display search results
-            st.markdown(f"### Search Results for: **{search_term}**")
-            if not search_results.empty:
-                # Ensure the dataframe takes up the full width of the page
-                st.dataframe(search_results[['artist', 'song', 'genre', 'year', 'popularity']], use_container_width=True)
-            else:
-                st.markdown("**No results found.**")
+# Render content based on the show_search state
+if st.session_state.show_search:
+    st.markdown('<p class="title">Search Songs/Artist</p>', unsafe_allow_html=True)
+    search_term = st.text_input("Search", placeholder="Type a song or artist name...")
+    if st.button("Search "):
+        search_results = df[df['artist'].str.contains(search_term, case=False, na=False) |
+                            df['song'].str.contains(search_term, case=False, na=False)]
 
+        # Display search results
+        st.markdown(f"### Search Results for: **{search_term}**")
+        if not search_results.empty:
+            # Format 'year' column to remove commas, keeping it as integer
+            search_results['year'] = search_results['year'].astype(str)
+
+            # Display the dataframe without the index
+            st.dataframe(search_results[['artist', 'song', 'genre', 'year', 'popularity']], use_container_width=True, hide_index=True)
+        else:
+            st.markdown("**No results found.**")
 else:
-    st.markdown('<p class="title"> Dataset Information </p>', unsafe_allow_html=True)
+    st.markdown('<p class="main-title">Spotify Dataset Dashboard</p>', unsafe_allow_html=True)
+    st.markdown('<p class="title">Dataset Information</p>', unsafe_allow_html=True)
 
     def make_donut(explicit_count, non_explicit_count, input_color):
         if input_color == 'green':
