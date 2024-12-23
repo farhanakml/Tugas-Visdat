@@ -130,7 +130,7 @@ df = filtered_df
 # Render content based on the show_search_songs state
 if st.session_state.show_search_songs:
     st.markdown('<p class="title">Search Songs</p>', unsafe_allow_html=True)
-    search_term = st.text_input("Search", placeholder="Type a song or artist name...")
+    search_term = st.text_input("Search", placeholder="Type a song...")
 
     if search_term:  # Ensure there's a search term entered
         search_results = df[df['artist'].str.contains(search_term, case=False, na=False) |
@@ -144,100 +144,50 @@ if st.session_state.show_search_songs:
         st.markdown(f"### Search Results for: **{search_term}**")
         
         if not search_results.empty:
-            # Show search result as a selectbox for selecting a song
-            # col1, col2 = st.columns([1, 2])
+            st.markdown("#### Songs in Search Results:")
+            # Center-align the cards by using an empty column on each side
+            _, col1, _ = st.columns([1, 3, 1])
 
-            # # Column 1: Song details in expanders
-            # with col1:
-                st.markdown("#### Songs in Search Results:")
+            with col1:
+                # Iterate through each song in the search results
                 for idx, row in search_results.iterrows():
-                    with st.expander(f"🎵 {row['song']} - {row['artist']}"):
-                        st.write(f"**Artist**: {row['artist']}")
-                        st.write(f"**Song**: {row['song']}")
-                        st.write(f"**Duration (ms)**: {row['duration_ms']}")
-                        st.write(f"**Explicit**: {'Yes' if row['explicit'] else 'No'}")
-                        st.write(f"**Year**: {row['year']}")
-                        st.write(f"**Popularity**: {row['popularity']}")
-                        st.write(f"**Danceability**: {row['danceability']}")
-                        st.write(f"**Energy**: {row['energy']}")
-                        st.write(f"**Key**: {row['key']}")
-                        st.write(f"**Loudness**: {row['loudness']}")
-                        st.write(f"**Mode**: {row['mode']}")
-                        st.write(f"**Speechiness**: {row['speechiness']}")
-                        st.write(f"**Acousticness**: {row['acousticness']}")
-                        st.write(f"**Instrumentalness**: {row['instrumentalness']}")
-                        st.write(f"**Liveness**: {row['liveness']}")
-                        st.write(f"**Valence**: {row['valence']}")
-                        st.write(f"**Tempo**: {row['tempo']}")
-                        st.write(f"**Genre(s)**: {', '.join(row['genre'])}")
+                    # Create a unique key for each song's detail visibility
+                    detail_key = f"show_detail_{idx}"
 
-            # # Column 2: Graph details
-            # with col2:
-            #     st.markdown("#### Artist Popularity")
-            #     # Group data by year and artist to calculate average popularity
-            #     popularity_per_year = search_results.groupby(['year', 'artist'])['popularity'].mean().reset_index()
+                    # Check if this key exists in session state, initialize if not
+                    if detail_key not in st.session_state:
+                        st.session_state[detail_key] = False
 
-            #     # Line chart for artist popularity per year
-            #     popularity_artist_chart = alt.Chart(popularity_per_year).mark_line(point=True).encode(
-            #         x=alt.X('year:O', title='Year'),
-            #         y=alt.Y('popularity:Q', title='Average Popularity'),
-            #         color='artist:N',
-            #         tooltip=['artist:N', 'year:O', 'popularity:Q']
-            #     ).properties(
-            #         width=600,
-            #         height=400
-            #     )
-            #     st.altair_chart(popularity_artist_chart, use_container_width=True)
+                    # Display the summary card
+                    st.markdown(f"""
+                    <div style="background-color:#1DB954; border-radius:10px; padding:10px; margin:10px; text-align:center;">
+                        <h5 style="color:white; font-size:16px; margin:0;">🎵 {row['song']} - {row['artist']}</h5>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-            #     st.markdown("#### Number of Released Songs per Year")
-            #     # Count number of songs released per year
-            #     songs_per_year = search_results.groupby('year')['song'].count().reset_index()
-            #     songs_per_year.columns = ['year', 'num_songs']
+                    # Display the detail box, centered, with limited width
+                    if st.button("Show More", key=f"{detail_key}_button", help="Click to toggle details", args=None, kwargs={"style": "background-color:#1DB954; color:#1DB954; padding:5px 10px; border-radius:5px; border:none; font-size:14px; cursor:pointer; margin:center; display:block;"}):
+                        # Toggle the visibility state for this song's details
+                        st.session_state[detail_key] = not st.session_state[detail_key]
 
-            #     # Create a horizontal bar chart for number of released songs per year
-            #     songs_per_year_chart = alt.Chart(songs_per_year).mark_bar(color='green').encode(
-            #         y=alt.Y('year:O', title='Year', sort='-x'),  # Horizontal orientation
-            #         x=alt.X('num_songs:Q', title='Number of Songs'),
-            #         tooltip=['year:O', 'num_songs:Q']
-            #     ).properties(
-            #         width=600,
-            #         height=400
-            #     )
-
-            #     st.altair_chart(songs_per_year_chart, use_container_width=True)
-
-            #     st.markdown("#### Danceability per Song")
-            #     # Create a bar chart for danceability per song
-            #     danceability_chart = alt.Chart(search_results).mark_bar().encode(
-            #         x=alt.X('song:N', title='Song', sort='-y'),
-            #         y=alt.Y('danceability:Q', title='Danceability'),
-            #         color='artist:N',
-            #         tooltip=['song:N', 'artist:N', 'danceability:Q']
-            #     ).properties(
-            #         width=600,
-            #         height=400
-            #     )
-            #     st.altair_chart(danceability_chart, use_container_width=True)
-
-            #     st.markdown("#### Genres per Song")
-            #     # Explode genres for each song to handle multiple genres per song
-            #     genres_per_song = search_results.explode('genre')
-
-            #     # Count number of songs per genre
-            #     genre_count = genres_per_song.groupby('genre')['song'].count().reset_index()
-            #     genre_count.columns = ['genre', 'num_songs']
-
-            #     # Create a donut chart for genres per song
-            #     donut_chart = alt.Chart(genre_count).mark_arc(innerRadius=50).encode(
-            #         theta=alt.Theta('num_songs:Q', title='Number of Songs'),
-            #         color=alt.Color('genre:N', legend=alt.Legend(title="Genre")),
-            #         tooltip=['genre:N', 'num_songs:Q']
-            #     ).properties(
-            #         width=400,
-            #         height=400
-            #     )
-
-            #     st.altair_chart(donut_chart, use_container_width=True)
+                    if st.session_state[detail_key]:
+                        st.markdown(f"""
+                        <div style="background-color:#333333; border-radius:10px; padding:10px; margin:10px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto;">
+                            <h5 style="color:white; font-size:16px;">🎶 Detailed Information</h5>
+                            <p style="color:white; font-size:14px; margin:0;">
+                                <strong>Artist:</strong> {row['artist']}<br>
+                                <strong>Song:</strong> {row['song']}<br>
+                                <strong>Duration (ms):</strong> {row['duration_ms']}<br>
+                                <strong>Explicit:</strong> {'Yes' if row['explicit'] else 'No'}<br>
+                                <strong>Year:</strong> {row['year']}<br>
+                                <strong>Popularity:</strong> {row['popularity']}<br>
+                                <strong>Danceability:</strong> {row['danceability']}<br>
+                                <strong>Energy:</strong> {row['energy']}<br>
+                                <strong>Instrumentalness:</strong> {row['instrumentalness']}<br>
+                                <strong>Genre(s):</strong> {', '.join(row['genre'])}
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
         else:
             st.markdown("**No results found.**")
     else:
@@ -262,32 +212,77 @@ elif st.session_state.show_search_artists:
 
                 # Render the same graphs as in the "Search Songs" functionality for this artist
 
-                col1, col2, col3 = st.columns([2, 2, 1])
+                col1, col2, col3 = st.columns([2, 2, 1.4])
                 with col1:
-                    avg_popularity_chart = alt.Chart(artist_songs).mark_line(point=True).encode(
-                    x=alt.X('year:O', title='Year'),
-                    y=alt.Y('mean(popularity):Q', title='Average Popularity'),
-                    color=alt.Color('artist:N', legend=None),  # Remove legend
-                    tooltip=['year:O', 'mean(popularity):Q']
-                    ).properties(width=500, height=250)
-
+                    avg_popularity_chart = alt.Chart(artist_songs).mark_line(point=True, color='#1DB954').encode(
+                        x=alt.X('year:O', title='Year'),
+                        y=alt.Y('mean(popularity):Q', title='Average Popularity'),
+                        tooltip=['year:O', 'mean(popularity):Q']
+                    ).properties(
+                        width=200,
+                        height=250
+                    )
                     st.markdown('<p class="subtitle">Average Popularity Across the Years</p>', unsafe_allow_html=True)
                     st.altair_chart(avg_popularity_chart, use_container_width=True)
+
+                    st.markdown('<p class="subtitle">Number of Released Songs per Year</p>', unsafe_allow_html=True)
+                    # Group data by year and count the number of songs
+                    songs_per_year = artist_songs.groupby('year')['song'].count().reset_index()
+                    songs_per_year.columns = ['year', 'num_songs']
+
+                    # Ensure the number of songs is an integer
+                    songs_per_year['num_songs'] = songs_per_year['num_songs'].astype(int)
+
+                    # Format 'num_songs' as string for tooltip display (to enforce integer appearance)
+                    songs_per_year['num_songs_str'] = songs_per_year['num_songs'].astype(str)
+
+                    # Create a vertical bar chart for number of songs released per year
+                    songs_per_year_chart = alt.Chart(songs_per_year).mark_bar(color='#1DB954').encode(
+                        x=alt.X('year:O', title='Year'),
+                        y=alt.Y('num_songs:Q', title='Number of Songs'),
+                        tooltip=[
+                            alt.Tooltip('year:O', title='Year'),
+                            alt.Tooltip('num_songs_str:N', title='Number of Songs')  # Use string version to guarantee no decimals
+                        ]
+                    ).properties(
+                        width=200,
+                        height=250
+                    )
+
+                    st.altair_chart(songs_per_year_chart, use_container_width=True)
 
 
                 # Graph for average duration of songs across the years
                 with col2:
-                    avg_duration_chart = alt.Chart(artist_songs).mark_line(point=True).encode(
+                    avg_duration_chart = alt.Chart(artist_songs).mark_line(point=True, color='#1DB954').encode(
                         x=alt.X('year:O', title='Year'),
                         y=alt.Y('mean(duration):Q', title='Average Duration (minute)'),
-                        color=alt.Color('artist:N', legend=None),
                         tooltip=['year:O', 'mean(duration):Q']
-                    ).properties(width=500, height=250)
+                    ).properties(
+                        width=200,
+                        height=250
+                    )
 
                     st.markdown('<p class="subtitle">Average Song Duration Across the Years</p>', unsafe_allow_html=True)
                     st.altair_chart(avg_duration_chart, use_container_width=True)
+
                 # Add other graphs here as needed (danceability, number of songs per year, etc.)
-                
+                    st.markdown('<p class="subtitle">Most Popular Songs</p>', unsafe_allow_html=True)
+                    most_popular_songs = artist_songs.sort_values(by='popularity', ascending=False).head(5)
+
+                    # Create a bar chart for the top 5 most popular songs
+                    popular_songs_chart = alt.Chart(most_popular_songs).mark_bar(color='#1DB954').encode(
+                        x=alt.X('popularity:Q', title='Popularity'),
+                        y=alt.Y('song:N', title='Song', sort='-x'),
+                        tooltip=['song:N', 'popularity:Q']
+                    ).properties(
+                        width=200,
+                        height=250
+                    )
+
+                    st.altair_chart(popular_songs_chart, use_container_width=True)
+
+            #     st.altair_chart(songs_per_year_chart, use_container_width=True)
                 # Donut chart for genres per song
                 with col3:
                     st.markdown('<p class="subtitle">Genres per Song</p>', unsafe_allow_html=True)
@@ -297,17 +292,41 @@ elif st.session_state.show_search_artists:
                     genre_count.columns = ['genre', 'num_songs']
 
                     # Create a donut chart for genres per song
+                    # Create a donut chart for genres per song
                     donut_chart = alt.Chart(genre_count).mark_arc(innerRadius=50).encode(
                         theta=alt.Theta('num_songs:Q', title='Number of Songs'),
-                        color=alt.Color('genre:N', legend=alt.Legend(title="Genre")),
-                        tooltip=['genre:N', 'num_songs:Q']
+                        color=alt.Color(
+                            'genre:N',
+                            scale=alt.Scale(scheme='greens'),  # Use green color scheme
+                            legend=alt.Legend(title="Genre")
+                        ),
+                        tooltip=[
+                            alt.Tooltip('genre:N', title='Genre'),
+                            alt.Tooltip('num_songs:Q', title='Number of Songs', format='.0f')  # Ensure integer display
+                        ]
                     ).properties(
-                        width=250,
+                        width=150,
+                        height=250
+                    )
+                    st.altair_chart(donut_chart, use_container_width=True)
+
+                    # Loudness Distribution
+                    st.markdown('<p class="subtitle">Loudness Distribution</p>', unsafe_allow_html=True)
+
+                    loudness_distribution_chart = alt.Chart(artist_songs).mark_point(size=60, color='#1DB954').encode(
+                        x=alt.X('song:N', title='Song', sort='-y'),  # Sort songs for better visibility
+                        y=alt.Y('loudness:Q', title='Loudness (dB)'),
+                        tooltip=[
+                            alt.Tooltip('song:N', title='Song'),
+                            alt.Tooltip('artist:N', title='Artist'),
+                            alt.Tooltip('loudness:Q', title='Loudness (dB)', format='.2f')
+                        ]
+                    ).properties(
+                        width=150,
                         height=250
                     )
 
-                    st.altair_chart(donut_chart, use_container_width=True)
-
+                    st.altair_chart(loudness_distribution_chart, use_container_width=True)
         else:
             st.markdown("**No artists found.**")
     else:
