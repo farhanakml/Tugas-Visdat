@@ -136,29 +136,99 @@ if st.session_state.show_search:
         
         if not search_results.empty:
             # Show search result as a selectbox for selecting a song
-            st.markdown("#### Songs in Search Results:")
-            
-            # For each song in the search result, show the details in an expander
-            for idx, row in search_results.iterrows():
-                with st.expander(f"🎵 {row['song']} - {row['artist']}"):
-                    st.write(f"**Artist**: {row['artist']}")
-                    st.write(f"**Song**: {row['song']}")
-                    st.write(f"**Duration (ms)**: {row['duration_ms']}")
-                    st.write(f"**Explicit**: {'Yes' if row['explicit'] else 'No'}")
-                    st.write(f"**Year**: {row['year']}")
-                    st.write(f"**Popularity**: {row['popularity']}")
-                    st.write(f"**Danceability**: {row['danceability']}")
-                    st.write(f"**Energy**: {row['energy']}")
-                    st.write(f"**Key**: {row['key']}")
-                    st.write(f"**Loudness**: {row['loudness']}")
-                    st.write(f"**Mode**: {row['mode']}")
-                    st.write(f"**Speechiness**: {row['speechiness']}")
-                    st.write(f"**Acousticness**: {row['acousticness']}")
-                    st.write(f"**Instrumentalness**: {row['instrumentalness']}")
-                    st.write(f"**Liveness**: {row['liveness']}")
-                    st.write(f"**Valence**: {row['valence']}")
-                    st.write(f"**Tempo**: {row['tempo']}")
-                    st.write(f"**Genre(s)**: {', '.join(row['genre'])}")
+            col1, col2 = st.columns([1, 2])
+
+            # Column 1: Song details in expanders
+            with col1:
+                st.markdown("#### Songs in Search Results:")
+                for idx, row in search_results.iterrows():
+                    with st.expander(f"🎵 {row['song']} - {row['artist']}"):
+                        st.write(f"**Artist**: {row['artist']}")
+                        st.write(f"**Song**: {row['song']}")
+                        st.write(f"**Duration (ms)**: {row['duration_ms']}")
+                        st.write(f"**Explicit**: {'Yes' if row['explicit'] else 'No'}")
+                        st.write(f"**Year**: {row['year']}")
+                        st.write(f"**Popularity**: {row['popularity']}")
+                        st.write(f"**Danceability**: {row['danceability']}")
+                        st.write(f"**Energy**: {row['energy']}")
+                        st.write(f"**Key**: {row['key']}")
+                        st.write(f"**Loudness**: {row['loudness']}")
+                        st.write(f"**Mode**: {row['mode']}")
+                        st.write(f"**Speechiness**: {row['speechiness']}")
+                        st.write(f"**Acousticness**: {row['acousticness']}")
+                        st.write(f"**Instrumentalness**: {row['instrumentalness']}")
+                        st.write(f"**Liveness**: {row['liveness']}")
+                        st.write(f"**Valence**: {row['valence']}")
+                        st.write(f"**Tempo**: {row['tempo']}")
+                        st.write(f"**Genre(s)**: {', '.join(row['genre'])}")
+
+            # Column 2: Graph details
+            with col2:
+                st.markdown("#### Artist Popularity")
+                # Group data by year and artist to calculate average popularity
+                popularity_per_year = search_results.groupby(['year', 'artist'])['popularity'].mean().reset_index()
+
+                # Line chart for artist popularity per year
+                popularity_artist_chart = alt.Chart(popularity_per_year).mark_line(point=True).encode(
+                    x=alt.X('year:O', title='Year'),
+                    y=alt.Y('popularity:Q', title='Average Popularity'),
+                    color='artist:N',
+                    tooltip=['artist:N', 'year:O', 'popularity:Q']
+                ).properties(
+                    width=600,
+                    height=400
+                )
+                st.altair_chart(popularity_artist_chart, use_container_width=True)
+
+                st.markdown("#### Number of Released Songs per Year")
+                # Count number of songs released per year
+                songs_per_year = search_results.groupby('year')['song'].count().reset_index()
+                songs_per_year.columns = ['year', 'num_songs']
+
+                # Create a horizontal bar chart for number of released songs per year
+                songs_per_year_chart = alt.Chart(songs_per_year).mark_bar(color='green').encode(
+                    y=alt.Y('year:O', title='Year', sort='-x'),  # Horizontal orientation
+                    x=alt.X('num_songs:Q', title='Number of Songs'),
+                    tooltip=['year:O', 'num_songs:Q']
+                ).properties(
+                    width=600,
+                    height=400
+                )
+
+                st.altair_chart(songs_per_year_chart, use_container_width=True)
+
+                st.markdown("#### Danceability per Song")
+                # Create a bar chart for danceability per song
+                danceability_chart = alt.Chart(search_results).mark_bar().encode(
+                    x=alt.X('song:N', title='Song', sort='-y'),
+                    y=alt.Y('danceability:Q', title='Danceability'),
+                    color='artist:N',
+                    tooltip=['song:N', 'artist:N', 'danceability:Q']
+                ).properties(
+                    width=600,
+                    height=400
+                )
+                st.altair_chart(danceability_chart, use_container_width=True)
+
+                st.markdown("#### Genres per Song")
+                # Explode genres for each song to handle multiple genres per song
+                genres_per_song = search_results.explode('genre')
+
+                # Count number of songs per genre
+                genre_count = genres_per_song.groupby('genre')['song'].count().reset_index()
+                genre_count.columns = ['genre', 'num_songs']
+
+                # Create a donut chart for genres per song
+                donut_chart = alt.Chart(genre_count).mark_arc(innerRadius=50).encode(
+                    theta=alt.Theta('num_songs:Q', title='Number of Songs'),
+                    color=alt.Color('genre:N', legend=alt.Legend(title="Genre")),
+                    tooltip=['genre:N', 'num_songs:Q']
+                ).properties(
+                    width=400,
+                    height=400
+                )
+
+                st.altair_chart(donut_chart, use_container_width=True)
         else:
             st.markdown("**No results found.**")
     else:
