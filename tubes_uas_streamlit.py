@@ -17,13 +17,12 @@ df = df[df['genre'] != 'set()']
 # Pisahkan genre berdasarkan delimiters koma atau titik koma
 df['genre'] = df['genre'].str.split(r'[;,]\s*')
 
-# Ekspansi genre menjadi baris terpisah
-df = df.explode('genre')
+# Keep the genre as a list, no need to explode
+# Remove the line where you explode genres, to keep each song as a single row
 
 df['duration'] = df['duration_ms'] / 60000
 
-
-st.markdown("""
+st.markdown(""" 
     <style>
     @font-face {
         font-family: 'Gotham';
@@ -39,9 +38,10 @@ st.markdown("""
     .stButton>button {
         background-color: #1DB954;
         color: white;
-        font-family: 'Gotham', sans-serif;
+        font-family: 'GothamBold', sans-serif;
         width: 100%;
         height: 40px;
+        border-radius: 20px;
     }
     .title {
         font-family: 'Gotham', sans-serif;
@@ -95,11 +95,11 @@ with st.sidebar:
     # Filter by genre using multiselect
     select_all = st.checkbox("Select All Genres", value=True)
     if select_all:
-        genre_filter = df['genre'].unique()  # Select all genres
+        genre_filter = df['genre'].explode().unique()  # Select all genres from the list
     else:
         genre_filter = st.multiselect(
             "Select Genre(s)",
-            options=df['genre'].unique(),
+            options=df['genre'].explode().unique(),
             default=[],
             help="Search and select one or multiple genres"
         )
@@ -108,7 +108,7 @@ with st.sidebar:
     filtered_df = df[
         (df['year'] >= year_filter[0]) &  # Filter by start year
         (df['year'] <= year_filter[1]) &  # Filter by end year
-        (df['genre'].isin(genre_filter))  # Filter by selected genres
+        (df['genre'].apply(lambda x: any(g in genre_filter for g in x)))  # Filter by selected genres
     ]
 
 # Filtered data
@@ -120,7 +120,8 @@ if st.session_state.show_search:
     search_term = st.text_input("Search", placeholder="Type a song or artist name...")
     if st.button("Search "):
         search_results = df[df['artist'].str.contains(search_term, case=False, na=False) |
-                            df['song'].str.contains(search_term, case=False, na=False)]
+                            df['song'].str.contains(search_term, case=False, na=False) |
+                            df['genre'].apply(lambda genres: any(search_term.lower() in genre.lower() for genre in genres))]
 
         # Display search results
         st.markdown(f"### Search Results for: **{search_term}**")
@@ -175,7 +176,7 @@ else:
 
     total_songs = df.shape[0]
     total_artists = df['artist'].nunique()
-    total_genres = df['genre'].nunique()
+    total_genres = df['genre'].explode().nunique()
         
     with col1:
         # st.metric('Total Songs', value=total_songs)
@@ -185,7 +186,7 @@ else:
 
         
     with col2:
-        genre_count = df.groupby('genre').size().reset_index(name='song_count')
+        genre_count = df.explode('genre').groupby('genre').size().reset_index(name='song_count')
         top_10_genres = genre_count.sort_values(by='song_count', ascending=False).head(8)
 
         # Create the Altair bar chart
@@ -252,4 +253,3 @@ else:
             height=300
         )
         st.altair_chart(songs_trend_chart, use_container_width=True)
-
