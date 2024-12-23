@@ -85,14 +85,22 @@ with st.sidebar:
     if st.button("Home"):
         st.session_state.show_search_songs = False
         st.session_state.show_search_artists = False
+        st.session_state.show_about = False
 
     if st.button("Search Songs"):
         st.session_state.show_search_songs = True
         st.session_state.show_search_artists = False
+        st.session_state.show_about = False
 
     if st.button("Search Artists"):
         st.session_state.show_search_songs = False
         st.session_state.show_search_artists = True
+        st.session_state.show_about = False 
+
+    if st.button("About"):
+        st.session_state.show_about = True 
+        st.session_state.show_search_songs = False
+        st.session_state.show_search_artists = False
 
     # Filters section
     st.subheader("Filters")
@@ -128,6 +136,7 @@ with st.sidebar:
 df = filtered_df
 
 # Render content based on the show_search_songs state
+# Render content based on the show_search_songs state
 if st.session_state.show_search_songs:
     st.markdown('<p class="title">Search Songs</p>', unsafe_allow_html=True)
     search_term = st.text_input("Search", placeholder="Type a song...")
@@ -145,53 +154,59 @@ if st.session_state.show_search_songs:
         
         if not search_results.empty:
             st.markdown("#### Songs in Search Results:")
-            # Center-align the cards by using an empty column on each side
-            _, col1, _ = st.columns([1, 3, 1])
 
-            with col1:
-                # Iterate through each song in the search results
-                for idx, row in search_results.iterrows():
+            # Split search results into pairs
+            pairs = [search_results.iloc[i:i+2] for i in range(0, len(search_results), 2)]
+            
+            # Display the songs in two columns per pair
+            for pair in pairs:
+                col1, col2 = st.columns(2)  # Create two columns for each pair
+
+                for i, (idx, row) in enumerate(pair.iterrows()):  # Make sure to get both the index and the row
                     # Create a unique key for each song's detail visibility
-                    detail_key = f"show_detail_{idx}"
+                    detail_key = f"show_detail_{idx}"  # Use idx for the detail key
 
                     # Check if this key exists in session state, initialize if not
                     if detail_key not in st.session_state:
                         st.session_state[detail_key] = False
 
-                    # Display the summary card
-                    st.markdown(f"""
-                    <div style="background-color:#1DB954; border-radius:10px; padding:10px; margin:10px; text-align:center;">
-                        <h5 style="color:white; font-size:16px; margin:0;">🎵 {row['song']} - {row['artist']}</h5>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    # Display the detail box, centered, with limited width
-                    if st.button("Show More", key=f"{detail_key}_button", help="Click to toggle details", args=None, kwargs={"style": "background-color:#1DB954; color:#1DB954; padding:5px 10px; border-radius:5px; border:none; font-size:14px; cursor:pointer; margin:center; display:block;"}):
-                        # Toggle the visibility state for this song's details
-                        st.session_state[detail_key] = not st.session_state[detail_key]
-
-                    if st.session_state[detail_key]:
+                    # Alternate between columns for each song in the pair
+                    with col1 if i == 0 else col2:
                         st.markdown(f"""
-                        <div style="background-color:#333333; border-radius:10px; padding:10px; margin:10px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto;">
-                            <h5 style="color:white; font-size:16px;">🎶 Detailed Information</h5>
-                            <p style="color:white; font-size:14px; margin:0;">
-                                <strong>Artist:</strong> {row['artist']}<br>
-                                <strong>Song:</strong> {row['song']}<br>
-                                <strong>Duration (ms):</strong> {row['duration_ms']}<br>
-                                <strong>Explicit:</strong> {'Yes' if row['explicit'] else 'No'}<br>
-                                <strong>Year:</strong> {row['year']}<br>
-                                <strong>Popularity:</strong> {row['popularity']}<br>
-                                <strong>Danceability:</strong> {row['danceability']}<br>
-                                <strong>Energy:</strong> {row['energy']}<br>
-                                <strong>Instrumentalness:</strong> {row['instrumentalness']}<br>
-                                <strong>Genre(s):</strong> {', '.join(row['genre'])}
-                            </p>
+                        <div style="background-color:#1DB954; border-radius:15px; padding:8px 15px; margin:10px 0; text-align:left; height:50px; overflow:hidden;">
+                            <h5 style="color:white; font-size:18px; margin:0; line-height: 30px;">🎵 {row['song']} - {row['artist']}</h5>
                         </div>
                         """, unsafe_allow_html=True)
+
+                        # Display the detail box, aligned left
+                        if st.button("Show More", key=f"{detail_key}_button", help="Click to toggle details"):
+                            # Toggle the visibility state for this song's details
+                            st.session_state[detail_key] = not st.session_state[detail_key]
+
+                        if st.session_state[detail_key]:
+                            st.markdown(f"""
+                            <div style="background-color:#222222; border-radius:10px; padding:10px; margin:10px 0; text-align:left;">
+                                <h5 style="color:white; font-size:16px;">🎶 Detailed Information</h5>
+                                <p style="color:white; font-size:14px; margin:0;">
+                                    <strong>Title:</strong> {row['song']}<br>
+                                    <strong>Artist:</strong> {row['artist']}<br>
+                                    <strong>Duration:</strong> {round(row['duration'], 2)} minutes<br>
+                                    <strong>Explicit:</strong> {'Yes' if row['explicit'] else 'No'}<br>
+                                    <strong>Year Released:</strong> {row['year']}<br>
+                                    <strong>Popularity:</strong> {row['popularity']}<br>
+                                    <strong>Danceability:</strong> {row['danceability']}<br>
+                                    <strong>Energy:</strong> {row['energy']}<br>
+                                    <strong>Instrumentalness:</strong> {row['instrumentalness']}<br>
+                                    <strong>Genre(s):</strong> {', '.join(row['genre'])}
+                                </p>
+                            </div>
+                            """, unsafe_allow_html=True)
+
         else:
             st.markdown("**No results found.**")
     else:
         st.markdown("**Please enter a search term.**")
+
 
 elif st.session_state.show_search_artists:
     st.markdown('<p class="title">Search Artists</p>', unsafe_allow_html=True)
@@ -331,13 +346,29 @@ elif st.session_state.show_search_artists:
             st.markdown("**No artists found.**")
     else:
         st.markdown("**Please enter an artist's name.**")
+
+elif st.session_state.show_about:
+    st.markdown('<p class="main-title">About</p>', unsafe_allow_html=True)
+    st.markdown("""
+    <p class="subtitle">
+        Ini adalah Project Tugas Besar UAS Visualisasi Data dari Kelompok 7 <br>
+        <br>
+        -	Muhammad Farhan Akmal (1301210486) <br>
+        -	Sofi Nurhayati Latifah (1301210076) <br>
+        -	Aisha Farizka Mawla (1301213122) <br>
+        <br>
+        Ini adalah dashboard untuk menganalisis data lagu Spotify. Anda dapat mencari lagu dan artis, 
+        melihat informasi detail, dan menjelajahi berbagai statistik tentang tren dan popularitas musik.
+    </p>
+    """, unsafe_allow_html=True)
+    
 else:
     st.markdown('<p class="main-title">Spotify Dataset Dashboard</p>', unsafe_allow_html=True)
     st.markdown('<p class="title">Dataset Information</p>', unsafe_allow_html=True)
 
     def make_donut(explicit_count, non_explicit_count, input_color):
         if input_color == 'green':
-            chart_color = ['#E74C3C', '#008000']
+            chart_color = ['#E74C3C', '#1DB954']
 
         total = explicit_count + non_explicit_count
         explicit_percentage = explicit_count / total * 100
@@ -360,7 +391,7 @@ else:
         ).properties(width=220, height=220)
 
         text = alt.Chart(pd.DataFrame({'text': [f'{non_explicit_percentage:.1f}%']})).mark_text(
-            align='center', fontSize=30, fontWeight=600, color='#008000'
+            align='center', fontSize=30, fontWeight=600, color='#1DB954'
         ).encode(
             text='text:N'
         ).properties(width=220, height=220)
@@ -387,7 +418,7 @@ else:
 
         # Create the Altair bar chart
         st.markdown('<p class="subtitle"> Number of Songs per Genre </p>', unsafe_allow_html=True)
-        genre_chart = alt.Chart(top_10_genres).mark_bar(color='green').encode(
+        genre_chart = alt.Chart(top_10_genres).mark_bar(color='#1DB954').encode(
             x=alt.X('genre:N', title='Genre', sort='-y'),
             y=alt.Y('song_count:Q', title='Number of Songs'),
             tooltip=['genre:N', 'song_count:Q']
@@ -420,7 +451,7 @@ else:
         artist_song_count = df.groupby('artist').size().reset_index(name='song_count')
         top_artists_by_songs = artist_song_count.sort_values(by='song_count', ascending=False).head(5)  # Top 5 artists
 
-        artist_chart = alt.Chart(top_artists_by_songs).mark_bar(color='green').encode(
+        artist_chart = alt.Chart(top_artists_by_songs).mark_bar(color='#1DB954').encode(
             x=alt.X('song_count:Q', title='Number of Songs'),
             y=alt.Y('artist:N', sort='-x', title='Artist'),
             tooltip=['artist:N', 'song_count:Q']
@@ -440,7 +471,7 @@ else:
         ).reset_index()
 
         # Line chart for the total number of songs released per year
-        songs_trend_chart = alt.Chart(annual_trends).mark_line(color='green', point=True).encode(
+        songs_trend_chart = alt.Chart(annual_trends).mark_line(color='#1DB954', point=True).encode(
             x=alt.X('year:O', title='Year'),
             y=alt.Y('total_songs:Q', title='Total Songs Released'),
             tooltip=['year:O', 'total_songs:Q']
