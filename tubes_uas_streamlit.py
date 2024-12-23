@@ -351,16 +351,33 @@ elif st.session_state.show_about:
     st.markdown('<p class="main-title">About</p>', unsafe_allow_html=True)
     st.markdown("""
     <p class="subtitle">
-        Ini adalah Project Tugas Besar UAS Visualisasi Data dari Kelompok 7 <br>
+        Tugas Besar Visualisasi Data Kelompok 7 <br>
         <br>
         -	Muhammad Farhan Akmal (1301210486) <br>
         -	Sofi Nurhayati Latifah (1301210076) <br>
         -	Aisha Farizka Mawla (1301213122) <br>
         <br>
         Dashboard ini berfungsi untuk menganalisis data lagu Spotify. Anda dapat mencari lagu dan artis, 
-        melihat informasi detail, dan menjelajahi berbagai statistik tentang tren dan popularitas musik.
+        melihat informasi detail, dan menjelajahi berbagai statistik tentang tren dan popularitas musik. <br>
+        <br>
+        <strong>Deskripsi Dataset:</strong> <br>
+        Dataset ini berisi lagu-lagu hits Spotify dari tahun 2000 hingga 2019, mencakup berbagai informasi seperti:
+        <ul>
+            <li><strong>Popularitas:</strong> Indikator seberapa populer sebuah lagu di platform Spotify.</li>
+            <li><strong>Danceability:</strong> Ukuran seberapa cocok sebuah lagu untuk menari, dengan nilai antara 0.0 dan 1.0.</li>
+            <li><strong>Energy:</strong> Ukuran intensitas dan aktivitas sebuah lagu, dari nilai 0.0 (tenang) hingga 1.0 (energetik).</li>
+            <li><strong>Valence:</strong> Indikator mood lagu, dengan nilai mendekati 1.0 mewakili lagu yang ceria dan mendekati 0.0 mewakili lagu yang sedih.</li>
+            <li><strong>Tempo:</strong> Kecepatan tempo lagu dalam BPM (beats per minute).</li>
+            <li><strong>Genre:</strong> Informasi tentang kategori genre lagu.</li>
+            <li><strong>Explicit:</strong> Indikator apakah sebuah lagu memiliki konten eksplisit.</li>
+            <li><strong>Fitur Audio:</strong> Meliputi akustik, instrumental, dan lainnya.</li>
+        <ul>
+        <br>
+        <strong>Sumber Dataset:</strong> Dataset ini berasal dari Kaggle
+        <a href="https://www.kaggle.com/datasets/paradisejoy/top-hits-spotify-from-20002019" target="_blank">Top Hits Spotify from 2000-2019</a>.
     </p>
     """, unsafe_allow_html=True)
+    st.dataframe(df)
     
 else:
     st.markdown('<p class="main-title">Spotify Dataset Dashboard</p>', unsafe_allow_html=True)
