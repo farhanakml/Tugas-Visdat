@@ -357,7 +357,7 @@ elif st.session_state.show_about:
         -	Sofi Nurhayati Latifah (1301210076) <br>
         -	Aisha Farizka Mawla (1301213122) <br>
         <br>
-        Ini adalah dashboard untuk menganalisis data lagu Spotify. Anda dapat mencari lagu dan artis, 
+        Dashboard ini berfungsi untuk menganalisis data lagu Spotify. Anda dapat mencari lagu dan artis, 
         melihat informasi detail, dan menjelajahi berbagai statistik tentang tren dan popularitas musik.
     </p>
     """, unsafe_allow_html=True)
@@ -457,7 +457,7 @@ else:
             tooltip=['artist:N', 'song_count:Q']
         ).properties(
             width=400,
-            height=300
+            height=280
         )
 
         st.altair_chart(artist_chart, use_container_width=True)
@@ -476,7 +476,61 @@ else:
             y=alt.Y('total_songs:Q', title='Total Songs Released'),
             tooltip=['year:O', 'total_songs:Q']
         ).properties(
-            width=600,
-            height=300
+            width=400,
+            height=280
         )
         st.altair_chart(songs_trend_chart, use_container_width=True)
+
+    col1, col2 = st.columns((5, 5), gap='large')
+    # Danceability Distribution Based on Songs
+    with col1:
+        st.markdown('<p class="subtitle">Top Genres by Popularity</p>', unsafe_allow_html=True)
+
+        # Calculate the total popularity for each genre
+        genre_popularity = (
+            df.explode('genre')  # Handle multiple genres per song
+            .groupby('genre')['popularity']
+            .sum()
+            .reset_index()
+            .rename(columns={'popularity': 'total_popularity'})
+        )
+
+        # Sort genres by popularity and select the top 10
+        top_genres = genre_popularity.sort_values(by='total_popularity', ascending=False).head(10)
+
+        # Create a vertical bar chart for top genres by popularity
+        top_genres_vertical_chart = alt.Chart(top_genres).mark_line(point=True, color='#1DB954').encode(
+            x=alt.X('genre:N', title='Genre', sort='-y'),
+            y=alt.Y('total_popularity:Q', title='Total Popularity'),
+            tooltip=[
+                alt.Tooltip('genre:N', title='Genre'),
+                alt.Tooltip('total_popularity:Q', title='Total Popularity', format='.2f')
+            ]
+        ).properties(
+            width=500,
+            height=380
+        )
+
+        st.altair_chart(top_genres_vertical_chart, use_container_width=True)
+
+    with col2:
+        st.markdown('<p class="subtitle">Danceability Distribution by Genre</p>', unsafe_allow_html=True)
+
+        # Prepare data: Flatten the genres for individual songs
+        danceability_data = df.explode('genre')[['genre', 'danceability']]
+
+        # Create a boxplot
+        danceability_boxplot = alt.Chart(danceability_data).mark_boxplot(extent='min-max', color='#1DB954').encode(
+            x=alt.X('danceability:Q', title='Danceability'),
+            y=alt.Y('genre:N', title='Genre', sort='-x'),
+            color=alt.Color('genre:N', legend=None),  # Use the default color for genres
+            tooltip=[
+                alt.Tooltip('genre:N', title='Genre'),
+                alt.Tooltip('danceability:Q', title='Danceability')
+            ]
+        ).properties(
+            width=500,
+            height=380
+        )
+
+        st.altair_chart(danceability_boxplot, use_container_width=True)
