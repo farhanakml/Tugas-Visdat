@@ -13,14 +13,18 @@ alt.themes.enable("dark")
 
 # Load data
 df = pd.read_csv("songs_normalize.csv")
+
+# Drop duplicates, keeping the row with the maximum popularity
+df = df.loc[df.groupby(['artist', 'song'])['popularity'].idxmax()]
+
+# Optionally drop any remaining duplicates (if you want to ensure no duplicates exist after the operation)
+df = df.drop_duplicates()
 df = df[df['genre'] != 'set()']
-# Pisahkan genre berdasarkan delimiters koma atau titik koma
 df['genre'] = df['genre'].str.split(r'[;,]\s*')
 
-# Keep the genre as a list, no need to explode
-# Remove the line where you explode genres, to keep each song as a single row
+df['duration'] = df['duration_ms'] / 60000  # Convert duration from milliseconds to minutes
 
-df['duration'] = df['duration_ms'] / 60000
+
 
 st.markdown(""" 
     <style>
@@ -118,21 +122,47 @@ df = filtered_df
 if st.session_state.show_search:
     st.markdown('<p class="title">Search Songs/Artist</p>', unsafe_allow_html=True)
     search_term = st.text_input("Search", placeholder="Type a song or artist name...")
-    if st.button("Search "):
+
+    if search_term:  # Ensure there's a search term entered
         search_results = df[df['artist'].str.contains(search_term, case=False, na=False) |
                             df['song'].str.contains(search_term, case=False, na=False) |
                             df['genre'].apply(lambda genres: any(search_term.lower() in genre.lower() for genre in genres))]
 
+        # Convert 'genre' column from list to string for processing
+        search_results['genre_str'] = search_results['genre'].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
+
         # Display search results
         st.markdown(f"### Search Results for: **{search_term}**")
+        
         if not search_results.empty:
-            # Format 'year' column to remove commas, keeping it as integer
-            search_results['year'] = search_results['year'].astype(str)
-
-            # Display the dataframe without the index
-            st.dataframe(search_results[['artist', 'song', 'genre', 'year', 'popularity']], use_container_width=True, hide_index=True)
+            # Show search result as a selectbox for selecting a song
+            st.markdown("#### Songs in Search Results:")
+            
+            # For each song in the search result, show the details in an expander
+            for idx, row in search_results.iterrows():
+                with st.expander(f"🎵 {row['song']} - {row['artist']}"):
+                    st.write(f"**Artist**: {row['artist']}")
+                    st.write(f"**Song**: {row['song']}")
+                    st.write(f"**Duration (ms)**: {row['duration_ms']}")
+                    st.write(f"**Explicit**: {'Yes' if row['explicit'] else 'No'}")
+                    st.write(f"**Year**: {row['year']}")
+                    st.write(f"**Popularity**: {row['popularity']}")
+                    st.write(f"**Danceability**: {row['danceability']}")
+                    st.write(f"**Energy**: {row['energy']}")
+                    st.write(f"**Key**: {row['key']}")
+                    st.write(f"**Loudness**: {row['loudness']}")
+                    st.write(f"**Mode**: {row['mode']}")
+                    st.write(f"**Speechiness**: {row['speechiness']}")
+                    st.write(f"**Acousticness**: {row['acousticness']}")
+                    st.write(f"**Instrumentalness**: {row['instrumentalness']}")
+                    st.write(f"**Liveness**: {row['liveness']}")
+                    st.write(f"**Valence**: {row['valence']}")
+                    st.write(f"**Tempo**: {row['tempo']}")
+                    st.write(f"**Genre(s)**: {', '.join(row['genre'])}")
         else:
             st.markdown("**No results found.**")
+    else:
+        st.markdown("**Please enter a search term.**")
 else:
     st.markdown('<p class="main-title">Spotify Dataset Dashboard</p>', unsafe_allow_html=True)
     st.markdown('<p class="title">Dataset Information</p>', unsafe_allow_html=True)
@@ -179,12 +209,10 @@ else:
     total_genres = df['genre'].explode().nunique()
         
     with col1:
-        # st.metric('Total Songs', value=total_songs)
         st.markdown(f'<p class="subtitle">Total Songs<br><span class="number">{total_songs}</span></p>', unsafe_allow_html=True)
         st.markdown(f'<p class="subtitle">Total Artists<br><span class="number">{total_artists}</span></p>', unsafe_allow_html=True)
         st.markdown(f'<p class="subtitle">Total Genres<br><span class="number">{total_genres}</span></p>', unsafe_allow_html=True)
 
-        
     with col2:
         genre_count = df.explode('genre').groupby('genre').size().reset_index(name='song_count')
         top_10_genres = genre_count.sort_values(by='song_count', ascending=False).head(8)
