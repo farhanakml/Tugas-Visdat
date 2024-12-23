@@ -29,43 +29,43 @@ df['duration'] = df['duration_ms'] / 60000  # Convert duration from milliseconds
 st.markdown(""" 
     <style>
     @font-face {
-        font-family: 'Gotham';
-        src: url('fonts/GothamMedium.ttf') format('truetype');
+        font-family: 'Poppins';
+        src: url('fonts/Poppins-Medium.ttf') format('truetype');
         font-weight: bold;
         font-style: normal;
     }
     body {
-        font-family: 'Gotham', sans-serif;
+        font-family: 'Poppins', sans-serif;
         background-color: #121212;
         color: white;
     }
     .stButton>button {
         background-color: #1DB954;
         color: white;
-        font-family: 'GothamBold', sans-serif;
+        font-family: 'Poppons-Bold', sans-serif;
         width: 100%;
         height: 40px;
         border-radius: 20px;
     }
     .title {
-        font-family: 'Gotham', sans-serif;
+        font-family: 'Poppins', sans-serif;
         color: white;
         font-size: 26px;
         font-weight: bold;
     }
     .main-title {
-        font-family: 'Gotham', sans-serif;
+        font-family: 'Poppins', sans-serif;
         color: white;
         font-size: 40px;
         font-weight: bold;
     }
     .subtitle{
-        font-family: 'Gotham', sans-serif;
+        font-family: 'Poppins', sans-serif;
         color: white;
         font-size: 18px;
     }
     .number{
-        font-family: 'Gotham', sans-serif;
+        font-family: 'Poppins', sans-serif;
         color: white;
         font-size: 26px;
     }
@@ -77,6 +77,9 @@ if 'show_search_songs' not in st.session_state:
 
 if 'show_search_artists' not in st.session_state:
     st.session_state.show_search_artists = False
+
+if 'show_about' not in st.session_state:
+    st.session_state.show_about = False
 
 # Sidebar content
 with st.sidebar:
@@ -186,7 +189,7 @@ if st.session_state.show_search_songs:
                         if st.session_state[detail_key]:
                             st.markdown(f"""
                             <div style="background-color:#222222; border-radius:10px; padding:10px; margin:10px 0; text-align:left;">
-                                <h5 style="color:white; font-size:16px;">🎶 Detailed Information</h5>
+                                <h5 style="color:white; font-size:16px;">🎶 Detail Information</h5>
                                 <p style="color:white; font-size:14px; margin:0;">
                                     <strong>Title:</strong> {row['song']}<br>
                                     <strong>Artist:</strong> {row['artist']}<br>
