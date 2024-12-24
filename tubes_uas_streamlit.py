@@ -30,8 +30,8 @@ st.markdown("""
     <style>
     @font-face {
         font-family: 'Poppins';
-        src: url('fonts/Poppins-Medium.ttf') format('truetype');
-        font-weight: bold;
+        src: url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+        font-weight: normal;
         font-style: normal;
     }
     body {
@@ -359,7 +359,7 @@ elif st.session_state.show_search_artists:
         st.markdown("**Please enter an artist's name.**")
 
 elif st.session_state.show_about:
-    st.markdown('<p class="main-title">About</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 32px; font-family: sans-serif; color: white; font-weight: bold;">About</p>', unsafe_allow_html=True)
     st.markdown("""
     <p class="subtitle">
         Tugas Besar Visualisasi Data Kelompok 7 <br>
@@ -391,8 +391,18 @@ elif st.session_state.show_about:
     st.dataframe(df)
     
 else:
-    st.markdown('<p class="main-title">Spotify Music Dataset Analysis Dashboard </p>', unsafe_allow_html=True)
-    st.markdown('<p class="belowtitle">An interactive dashboard providing insights into Spotify\'s song and artist data from 1998 to 2020</p>', unsafe_allow_html=True)
+    st.markdown("""
+    <p style="font-size: 32px; font-family: 'Poppins', sans-serif; color: white; font-weight: bold;">
+    Spotify Music Dataset Analysis Dashboard
+    </p>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <p style="font-size: 20px; font-family: 'Poppins', sans-serif; color: white; font-weight: bold;">
+    An interactive dashboard providing insights into Spotify\'s song and artist data from 1998 to 2020
+    </p>
+    """, unsafe_allow_html=True)
+
 
     def make_donut(explicit_count, non_explicit_count, input_color):
         if input_color == 'green':
