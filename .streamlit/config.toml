@@ -3,4 +3,3 @@ primaryColor = "#1DB954"
 backgroundColor = "#0e1117"  # Dark background color
 secondaryBackgroundColor = "#262730"  # Slightly lighter for contrast
 textColor = "white"  # Text color for readability
-font = "sans serif"  # Optional, choose a font style

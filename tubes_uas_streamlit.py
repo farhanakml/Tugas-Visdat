@@ -26,7 +26,7 @@ df['duration'] = df['duration_ms'] / 60000  # Convert duration from milliseconds
 
 
 
-st.markdown(""" 
+st.markdown("""
     <style>
     @font-face {
         font-family: 'Poppins';
@@ -35,14 +35,14 @@ st.markdown("""
         font-style: normal;
     }
     body {
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Poppins', sans-serif ;
         background-color: #121212;
         color: white;
     }
     .stButton>button {
         background-color: #1DB954;
         color: white;
-        font-family: 'Poppons-Bold', sans-serif;
+        font-family: 'Poppins';
         width: 100%;
         height: 40px;
         border-radius: 20px;
@@ -56,7 +56,7 @@ st.markdown("""
     .main-title {
         font-family: 'Poppins', sans-serif;
         color: white;
-        font-size: 40px;
+        font-size: 36px;
         font-weight: bold;
     }
     .subtitle{
@@ -69,8 +69,16 @@ st.markdown("""
         color: white;
         font-size: 26px;
     }
+    .belowtitle{
+        font-family: 'Poppins', sans-serif;
+        color: white;
+        font-size: 24px;
+    }
+    .header-container img {
+        height: 50px; /* Adjust the size of the image */
+    }
     </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 if 'show_search_songs' not in st.session_state:
     st.session_state.show_search_songs = False
@@ -383,8 +391,8 @@ elif st.session_state.show_about:
     st.dataframe(df)
     
 else:
-    st.markdown('<p class="main-title">Spotify Dataset Dashboard</p>', unsafe_allow_html=True)
-    st.markdown('<p class="title">Dataset Information</p>', unsafe_allow_html=True)
+    st.markdown('<p class="main-title">Spotify Music Dataset Analysis Dashboard </p>', unsafe_allow_html=True)
+    st.markdown('<p class="belowtitle">An interactive dashboard providing insights into Spotify\'s song and artist data from 1998 to 2020</p>', unsafe_allow_html=True)
 
     def make_donut(explicit_count, non_explicit_count, input_color):
         if input_color == 'green':
